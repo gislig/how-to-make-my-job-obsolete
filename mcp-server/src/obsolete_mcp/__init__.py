@@ -3,4 +3,4 @@
 Part 4 of the series "How to Make My Job Obsolete: Creating an Infrastructure Agent".
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"

@@ -91,8 +91,13 @@ def replica_changes(
         if v is None:
             continue
         if prev is not None and v != prev:
-            window = [req.get(ts - timedelta(minutes=i), 0.0) for i in range(1, 6)]
+            window = [req.get(ts - timedelta(minutes=i), 0.0) for i in range(2, 7)]
             before = sum(window) / 5
+            # Metric minutes and replica minutes don't line up exactly: the load that triggered a scale-out
+            # is often in the minute before the replica count moved, so look at both.
+            recent = max(req.get(ts, 0.0), req.get(ts - timedelta(minutes=1), 0.0))
+            lookback = [(ts - timedelta(minutes=i), req.get(ts - timedelta(minutes=i), 0.0)) for i in range(1, 16)]
+            peak_ts, peak = max(lookback, key=lambda p: p[1])
             out.append(
                 {
                     "time": ts,
@@ -100,32 +105,58 @@ def replica_changes(
                     "to": int(v),
                     "direction": "scale-out" if v > prev else "scale-in",
                     "requestsThisMinute": req.get(ts),
+                    "requestsRecent": recent,
                     "requestsAvgPrev5Min": round(before, 1),
+                    "requestsPeakPrev15Min": peak,
+                    "requestsPeakTime": peak_ts,
                 }
             )
         prev = v
     return out
 
 
+SCALE_KEYS = ("scale", "template")
+
+
+def _touches_scale(change: dict[str, Any]) -> bool:
+    """True when a resource change could have moved the replica count. Without a diff we can't tell, so assume yes."""
+    diff = change.get("changes")
+    if diff is None:
+        return True
+    return any(k in str(path).lower() for path in diff for k in SCALE_KEYS)
+
+
 def explain(change: dict[str, Any], config_changes: list[dict[str, Any]], alerts: list[dict[str, Any]], app_id: str) -> str:
-    """A plain-language reason for one replica change. Config changes on the app win, then alerts, then load."""
+    """A plain-language reason for one replica change.
+
+    Order: a configuration change on the app that touched its scale settings, then load, then an alert on the app.
+    An alert such as "replica ceiling reached" is usually a consequence of scaling, not its cause, so load wins.
+    """
     t = change["time"]
     for c in config_changes:
         ct = c.get("time")
-        if ct and c.get("targetResourceId", "").lower() == app_id.lower() and t - timedelta(minutes=10) <= ct <= t:
+        if (ct and c.get("targetResourceId", "").lower() == app_id.lower() and t - timedelta(minutes=10) <= ct <= t
+                and _touches_scale(c)):
             who = c.get("changedBy") or "unknown"
             return f"configuration change on the app at {ct:%H:%M} by {who} ({c.get('clientType') or 'unknown client'})"
+    recent = change.get("requestsRecent", change.get("requestsThisMinute")) or 0
+    before = change.get("requestsAvgPrev5Min") or 0
+    if change["direction"] == "scale-out" and recent > 0 and (before == 0 or recent > before * 1.2):
+        return f"load rose: {recent:.0f} requests/min against {before:.0f} avg in the 5 min before (HTTP/CPU rule)"
+    peak = change.get("requestsPeakPrev15Min") or 0
+    now_req = change.get("requestsThisMinute") or 0
+    if change["direction"] == "scale-in" and peak > 0 and now_req < peak * 0.8:
+        pt = change.get("requestsPeakTime")
+        at = f" at {pt:%H:%M}" if pt else ""
+        return (f"load fell: {now_req:.0f} requests/min now against a peak of {peak:.0f}{at}; "
+                "scale-in after the scale-down stabilization window (300 s)")
     for a in alerts:
         at = a.get("time")
-        if at and t - timedelta(minutes=10) <= at <= t:
+        target = (a.get("targetResource") or app_id).lower()
+        if at and target == app_id.lower() and t - timedelta(minutes=10) <= at <= t:
             return f"alert '{a.get('name')}' fired at {at:%H:%M}"
-    now_req, before = change.get("requestsThisMinute"), change.get("requestsAvgPrev5Min") or 0
     if change["direction"] == "scale-out":
-        if now_req is not None and before and now_req > before * 1.2:
-            return f"load rose: {now_req:.0f} requests/min against {before:.0f} avg in the previous 5 min (HTTP/CPU rule)"
         return "scale rule fired (HTTP concurrency or CPU); request volume alone does not explain it"
-    if now_req is not None and now_req < before:
-        return f"load fell: {now_req:.0f} requests/min against {before:.0f} avg; scale-in after the scale-down stabilization window"
     return "scale-in after the scale-down stabilization window (300 s)"
 
 
@@ -145,11 +176,12 @@ def build_timeline(
             "changedBy": c.get("changedBy"),
             "clientType": c.get("clientType"),
             "changeType": c.get("changeType"),
+            "changes": c.get("changes"),
         }
         for c in changes
     ]
     al = [{"time": _dt(a.get("startTime")), "name": a.get("name"), "severity": a.get("severity"),
-           "condition": a.get("monitorCondition")} for a in alerts]
+           "condition": a.get("monitorCondition"), "targetResource": a.get("targetResource")} for a in alerts]
     events: list[dict[str, Any]] = []
     for ch in replica_changes(replicas, requests):
         events.append({"time": ch["time"], "kind": "scaling",

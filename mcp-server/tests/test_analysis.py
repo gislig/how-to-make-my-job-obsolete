@@ -59,3 +59,22 @@ def test_timeline_is_ordered_and_merged():
                           "Properties": {"ToolName": "SearchResource", "EventType": "ToolStart"}}])
     assert [e["kind"] for e in tl] == ["change", "alert", "agent", "scaling"]
     assert tl == sorted(tl, key=lambda e: e["time"])
+
+
+def test_live_regressions_from_first_deployment():
+    # Seen on the first live run (25 Nov 2026): a load test from zero, then scale-in long after the load stopped,
+    # with an unrelated workspace alert and a no-op `az containerapp update` nearby.
+    reps = minutes([1] * 6 + [10] * 11 + [2, 2, 2, 1])
+    reqs = minutes([0] * 5 + [90000] + [150000] * 5 + [0] * 10)
+    ch = replica_changes(reps, reqs)
+    assert [(c["from"], c["to"]) for c in ch] == [(1, 10), (10, 2), (2, 1)]
+    assert "load rose" in explain(ch[0], [], [], "/id")
+    workspace_alert = [{"time": ch[1]["time"] - timedelta(minutes=5), "name": "mcp-scale-rejected",
+                        "targetResource": "/workspaces/log"}]
+    why = explain(ch[1], [], workspace_alert, "/id")
+    assert "load fell" in why and "mcp-scale-rejected" not in why
+    noop = [{"time": ch[2]["time"] - timedelta(minutes=2), "targetResourceId": "/id", "changedBy": "gisli",
+             "clientType": "CLI", "changes": {}}]
+    assert "configuration change" not in explain(ch[2], noop, [], "/id")
+    scale_edit = [dict(noop[0], changes={"properties.template.scale.minReplicas": {"previousValue": 2, "newValue": 1}})]
+    assert "configuration change" in explain(ch[2], scale_edit, [], "/id")
