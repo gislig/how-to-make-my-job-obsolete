@@ -7,9 +7,11 @@ audit trail, and answers questions from a chat app through a custom MCP server.
 
 Author: **Gísli Guðmundsson**, Microsoft MVP, Iceland.
 
-> Status: all four parts are written. Everything here was validated without an Azure subscription
-> (`scripts/validate.sh`: Bicep build, lint and build-params, KQL checks, 55 Python tests, plus an MCP Inspector run
-> against the server). I haven't deployed this repo to a live subscription yet. Run `what-if` first.
+> Status: all four parts are written and validated offline (`scripts/validate.sh`: Bicep build, lint and
+> build-params, KQL checks, Python tests, MCP Inspector). On 25 Nov 2026 I deployed parts 1–4 end to end to a live
+> subscription in Sweden Central: foundation, governance (Audit), the MCP server and, briefly, the SRE Agent. I
+> load-tested it until it scaled 1 → 10 replicas and called the MCP tools over HTTPS. The bugs that run found are fixed
+> (MCP server 1.0.2). Always run `what-if` first.
 
 ## The series
 
@@ -56,7 +58,7 @@ az group create -n $RG -l $LOC
 ./scripts/deploy-stack.sh $RG foundation      # part 1
 ./scripts/deploy-stack.sh $RG agent           # part 2
 ./scripts/deploy-governance.sh $RG aiops $LOC Audit   # part 3
-./scripts/deploy-mcp.sh $RG 1.0.0             # part 4: prints the MCP URL and two API keys once
+KEYS_FILE=./secrets/mcp-keys.txt ./scripts/deploy-mcp.sh $RG 1.0.2   # part 4: MCP URL + two API keys (file, mode 600)
 ```
 
 Then follow `docs/connect-chat-assistant.md`.
