@@ -186,6 +186,8 @@ resource mcp 'Microsoft.App/containerApps@2026-01-01' = if (deployApp) {
             { name: 'AIOPS_RESOURCE_GROUP', value: resourceGroup().name }
             { name: 'LOG_ANALYTICS_WORKSPACE_ID', value: workspace.properties.customerId }
             { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }
+            // Shows up as AppRoleName / cloud_RoleName, so audit queries can tell this server from the SRE Agent.
+            { name: 'OTEL_SERVICE_NAME', value: 'infra-agent-mcp' }
             { name: 'MCP_API_KEYS', secretRef: 'mcp-api-keys' }
             { name: 'MCP_ALLOWED_HOSTS', value: fqdn }
             { name: 'ALLOW_WRITES', value: string(allowWrites) }

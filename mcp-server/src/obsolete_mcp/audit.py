@@ -20,6 +20,9 @@ current_client: contextvars.ContextVar[str] = contextvars.ContextVar("mcp_client
 def configure() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     log.setLevel(logging.INFO)
+    # The Azure SDK logs every HTTP request and response header at INFO (including each telemetry upload).
+    # That floods the console log table you pay to ingest, so keep only its warnings.
+    logging.getLogger("azure").setLevel(logging.WARNING)
     if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
         from azure.identity import DefaultAzureCredential
         from microsoft.opentelemetry import use_microsoft_opentelemetry

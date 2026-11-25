@@ -16,6 +16,13 @@ case "$PART" in
   *) echo "unknown part: $PART" >&2; exit 2 ;;
 esac
 
+if [[ "$PART" == mcp && "${DEPLOY_APP:-false}" == true && -z "${MCP_API_KEYS:-}" ]]; then
+  # The bicepparam reads the keys from the environment. Deploying the app without them would replace the
+  # stored secret with an empty value and lock every client out.
+  echo "MCP_API_KEYS is not set. Export the existing keys (client:key,client:key) before redeploying the MCP app." >&2
+  exit 2
+fi
+
 args=(
   --name "obsolete-$PART"
   --resource-group "$RG"
