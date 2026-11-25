@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Part 4: build and deploy the MCP server. Prints the URL and the API keys ONCE. Store them in your password manager.
 # Usage: deploy-mcp.sh <resource-group> [image-tag]
+# Set KEYS_FILE=/path/to/file to write the keys to that file (mode 600) instead of printing them.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 RG="${1:?usage: deploy-mcp.sh <resource-group> [image-tag]}"
@@ -23,10 +24,22 @@ DEPLOY_APP=true ./scripts/deploy-stack.sh "$RG" mcp
 URL=$(az containerapp show -g "$RG" -n "$(az containerapp list -g "$RG" --query "[?ends_with(name,'-mcp')].name | [0]" -o tsv)" \
   --query properties.configuration.ingress.fqdn -o tsv)
 
-cat <<OUT
+if [[ -n "${KEYS_FILE:-}" ]]; then
+  ( umask 077; mkdir -p "$(dirname "$KEYS_FILE")"
+    printf 'MCP endpoint=https://%s/mcp\nGROKBOT_KEY=%s\nSRE_AGENT_KEY=%s\n' "$URL" "$GROK_KEY" "$SRE_KEY" > "$KEYS_FILE" )
+  chmod 600 "$KEYS_FILE"
+  cat <<OUT
+
+MCP endpoint : https://${URL}/mcp
+API keys     : written to ${KEYS_FILE} (mode 600)
+Header       : Authorization: Bearer <key>   (or X-API-Key: <key>)
+OUT
+else
+  cat <<OUT
 
 MCP endpoint : https://${URL}/mcp
 Grok Bot key : ${GROK_KEY}
 SRE Agent key: ${SRE_KEY}
 Header       : Authorization: Bearer <key>   (or X-API-Key: <key>)
 OUT
+fi
