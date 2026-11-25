@@ -1,0 +1,6 @@
+*.json.bak
+infra/**/*.json
+!bicepconfig.json
+.azure/
+*.env
+node_modules/

@@ -1,0 +1,11 @@
+// Part 1 preview (used from part 3): what the agent did. Run in the agent's Application Insights resource.
+// Event and field names from "Audit agent actions in Azure SRE Agent" (Microsoft Learn).
+customEvents
+| where timestamp > ago(7d)
+| where name in ("AgentToolExecution", "AgentAzCliExecution", "ApprovalDecision")
+| extend Tool = tostring(customDimensions.ToolName),
+         Input = tostring(customDimensions.ToolInput),
+         Phase = tostring(customDimensions.EventType)
+| where name != "AgentToolExecution" or Phase == "ToolStart"
+| project timestamp, name, Tool, Input
+| order by timestamp desc

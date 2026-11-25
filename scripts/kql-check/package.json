@@ -1,0 +1,7 @@
+{
+  "name": "kql-check",
+  "private": true,
+  "description": "Parse and semantically check the queries in ../../queries against the table schemas they use.",
+  "scripts": { "check": "node check.js ../../queries/*.kql" },
+  "dependencies": { "@kusto/language-service-next": "*" }
+}
