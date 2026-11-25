@@ -9,3 +9,5 @@ __pycache__/
 *.egg-info/
 mcp-server/build/
 .venv/
+secrets/
+*.keys.txt
