@@ -1,0 +1,33 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"app\": \"ca-demo-web\",\n  \"allowed\": true,\n  \"applied\": true,\n  \"mode\": \"autonomous\",\n  \"from\": [\n    1,\n    10\n  ],\n  \"to\": [\n    3,\n    10\n  ],\n  \"envelope\": [\n    1,\n    10\n  ],\n  \"reasons\": [],\n  \"now\": [\n    3,\n    10\n  ],\n  \"revision\": \"ca-demo-web--r2\"\n}"
+    }
+  ],
+  "structuredContent": {
+    "app": "ca-demo-web",
+    "allowed": true,
+    "applied": true,
+    "mode": "autonomous",
+    "from": [
+      1,
+      10
+    ],
+    "to": [
+      3,
+      10
+    ],
+    "envelope": [
+      1,
+      10
+    ],
+    "reasons": [],
+    "now": [
+      3,
+      10
+    ],
+    "revision": "ca-demo-web--r2"
+  },
+  "isError": false
+}

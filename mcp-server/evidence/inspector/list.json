@@ -1,0 +1,281 @@
+{
+  "tools": [
+    {
+      "name": "list_apps",
+      "title": "List managed apps",
+      "description": "List container apps in the resource group with their current scale range and operating contract.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "title": "list_appsArguments"
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "list_appsDictOutput"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_status",
+      "title": "App status",
+      "description": "Current state of one container app: revision, provisioning, scale range, scale rules, replica count right now and the operating contract.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "title": "App",
+            "type": "string"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "title": "get_statusArguments"
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "get_statusDictOutput"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_contract",
+      "title": "Operating contract",
+      "description": "The operating contract (aiops-* tags) for one app: owner, replica envelope, change mode, tier, SLO, budget.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "title": "App",
+            "type": "string"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "title": "get_contractArguments"
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "get_contractDictOutput"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_baseline",
+      "title": "Hour-of-week baseline",
+      "description": "What normal looks like: median and p90 of hourly requests per hour-of-week over the last N days (platform metrics), how the last hour compares, and a contract-clipped minReplicas suggestion for the next hour.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "title": "App",
+            "type": "string"
+          },
+          "days": {
+            "default": 28,
+            "title": "Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "title": "get_baselineArguments"
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "get_baselineDictOutput"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_scaling_timeline",
+      "title": "Scaling timeline (and why)",
+      "description": "Every replica change in the last N hours with a plain-language reason, merged with configuration changes, alerts and agent actions in one ordered timeline.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "title": "App",
+            "type": "string"
+          },
+          "hours": {
+            "default": 24,
+            "title": "Hours",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "app"
+        ],
+        "title": "get_scaling_timelineArguments"
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "get_scaling_timelineDictOutput"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_recent_changes",
+      "title": "What changed",
+      "description": "Resource changes in the resource group from Azure Resource Graph (who, what, which client), newest first.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "hours": {
+            "default": 24,
+            "title": "Hours",
+            "type": "integer"
+          }
+        },
+        "title": "get_recent_changesArguments"
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "get_recent_changesDictOutput"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_alerts",
+      "title": "Alerts",
+      "description": "Azure Monitor alerts for resources in the resource group from Azure Resource Graph, newest first.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "hours": {
+            "default": 24,
+            "title": "Hours",
+            "type": "integer"
+          }
+        },
+        "title": "get_alertsArguments"
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "get_alertsDictOutput"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_agent_activity",
+      "title": "Agent activity",
+      "description": "What the agents did: SRE Agent tool calls, Azure CLI commands and approvals, and this server's own audited calls (Application Insights custom events in Log Analytics).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "hours": {
+            "default": 24,
+            "title": "Hours",
+            "type": "integer"
+          }
+        },
+        "title": "get_agent_activityArguments"
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "get_agent_activityDictOutput"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "set_scale_range",
+      "title": "Set scale range (bounded)",
+      "description": "Change minReplicas/maxReplicas of one app, only inside its operating contract. Defaults to dry_run=true. Applies only when the server allows writes AND the contract's effective mode is autonomous; otherwise returns a proposal. A reason is required and audited.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "app": {
+            "title": "App",
+            "type": "string"
+          },
+          "min_replicas": {
+            "title": "Min Replicas",
+            "type": "integer"
+          },
+          "max_replicas": {
+            "title": "Max Replicas",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "dry_run": {
+            "default": true,
+            "title": "Dry Run",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "app",
+          "min_replicas",
+          "max_replicas",
+          "reason"
+        ],
+        "title": "set_scale_rangeArguments"
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "set_scale_rangeDictOutput"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
+}

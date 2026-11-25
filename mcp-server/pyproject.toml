@@ -1,0 +1,32 @@
+[project]
+name = "obsolete-mcp"
+version = "1.0.0"
+description = "Custom MCP server for the infrastructure agent (series: How to Make My Job Obsolete)"
+requires-python = ">=3.12"
+license = "MIT"
+dependencies = [
+  "mcp==2.3.0",
+  "azure-identity==1.27.0",
+  "azure-mgmt-appcontainers==5.1.0",
+  "azure-mgmt-monitor==7.0.0",
+  "azure-mgmt-resourcegraph==8.0.1",
+  "azure-monitor-query==2.0.0",
+  "microsoft-opentelemetry==1.6.0",
+  "uvicorn==0.54.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest==9.2.0", "anyio==4.16.0", "httpx==0.28.1"]
+
+[project.scripts]
+obsolete-mcp = "obsolete_mcp.server:main"
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

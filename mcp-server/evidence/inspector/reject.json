@@ -1,0 +1,31 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"app\": \"ca-demo-web\",\n  \"allowed\": false,\n  \"applied\": false,\n  \"mode\": \"autonomous\",\n  \"from\": [\n    1,\n    10\n  ],\n  \"to\": [\n    1,\n    50\n  ],\n  \"envelope\": [\n    1,\n    10\n  ],\n  \"reasons\": [\n    \"new max 50 is above the contract ceiling 10\",\n    \"change is larger than the per-call step limit of 5 replicas\"\n  ]\n}"
+    }
+  ],
+  "structuredContent": {
+    "app": "ca-demo-web",
+    "allowed": false,
+    "applied": false,
+    "mode": "autonomous",
+    "from": [
+      1,
+      10
+    ],
+    "to": [
+      1,
+      50
+    ],
+    "envelope": [
+      1,
+      10
+    ],
+    "reasons": [
+      "new max 50 is above the contract ceiling 10",
+      "change is larger than the per-call step limit of 5 replicas"
+    ]
+  },
+  "isError": false
+}

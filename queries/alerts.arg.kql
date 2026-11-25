@@ -1,0 +1,12 @@
+// Azure Resource Graph: alerts for resources in the resource group in the last 24 hours (MCP tool get_alerts).
+alertsmanagementresources
+| extend startTime = todatetime(properties.essentials.startDateTime),
+    monitorCondition = tostring(properties.essentials.monitorCondition),
+    severity = tostring(properties.essentials.severity),
+    alertRule = tostring(properties.essentials.alertRule),
+    targetResource = tostring(properties.essentials.targetResource)
+| where startTime > ago(24h)
+| where targetResource contains '/resourceGroups/rg-demo/'
+| project startTime, name, severity, monitorCondition, alertRule, targetResource
+| order by startTime desc
+| take 200

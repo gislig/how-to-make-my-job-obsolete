@@ -1,4 +1,4 @@
-name: validate-bicep
+name: validate
 on:
   pull_request:
   push:
@@ -6,13 +6,23 @@ on:
 permissions:
   contents: read
 jobs:
-  bicep:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
       - name: Install Bicep CLI
         run: |
           curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
           chmod +x bicep && sudo mv bicep /usr/local/bin/bicep
-      - name: Build, lint, build-params
+      - name: Install MCP server and test dependencies
+        run: pip install -e './mcp-server[test]'
+      - name: Install KQL checker
+        run: cd scripts/kql-check && npm install
+      - name: Bicep, KQL, tests
         run: ./scripts/validate.sh

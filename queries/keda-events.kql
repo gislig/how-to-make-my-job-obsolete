@@ -1,7 +1,0 @@
-// Part 2: what the scaling reflex (KEDA) logged. Check the EventSource and Reason values in your own
-// workspace first; Microsoft documents that KEDA events land in ContainerAppSystemLogs but doesn't list every value.
-ContainerAppSystemLogs
-| where TimeGenerated > ago(24h)
-| where EventSource has "keda"
-| summarize Events = count(), Last = max(TimeGenerated), Sample = take_any(Log) by ContainerAppName, Reason, Type
-| order by Events desc

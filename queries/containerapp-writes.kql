@@ -1,0 +1,6 @@
+// Part 3: who changed a container app, from the Activity Log export (AzureActivity).
+AzureActivity
+| where TimeGenerated > ago(7d)
+| where OperationNameValue =~ "Microsoft.App/containerApps/write"
+| project TimeGenerated, Caller, ActivityStatusValue, ResourceGroup, _ResourceId, CorrelationId
+| order by TimeGenerated desc

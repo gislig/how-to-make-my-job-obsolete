@@ -6,10 +6,15 @@ const fs=require('fs');
 const K=Kusto.Language, S=K.Symbols;
 function tbl(name, cols){ return new S.TableSymbol.$ctor4(name, cols.map(([n,t])=>new S.ColumnSymbol(n, t))); }
 const s=S.ScalarTypes;
-const azm=tbl('AzureMetrics',[['TimeGenerated',s.DateTime],['ResourceId',s.String],['Resource',s.String],['ResourceGroup',s.String],['ResourceProvider',s.String],['MetricName',s.String],['Total',s.Real],['Count',s.Real],['Maximum',s.Real],['Minimum',s.Real],['Average',s.Real],['TimeGrain',s.String],['UnitName',s.String]]);
-const casl=tbl('ContainerAppSystemLogs',[['TimeGenerated',s.DateTime],['ContainerAppName',s.String],['RevisionName',s.String],['ReplicaName',s.String],['EventSource',s.String],['Reason',s.String],['Type',s.String],['Log',s.String],['Count',s.Int],['EnvironmentName',s.String]]);
+// Columns from the Azure Monitor Logs table reference (AppEvents, AzureActivity, ContainerAppSystemLogs),
+// the Application Insights customEvents schema, and the Resource Graph tables used by the MCP server.
+const casl=tbl('ContainerAppSystemLogs',[['TimeGenerated',s.DateTime],['ContainerAppName',s.String],['RevisionName',s.String],['ReplicaName',s.String],['EventSource',s.String],['Reason',s.String],['Type',s.String],['Log',s.String],['Count',s.Int],['EnvironmentName',s.String],['_ResourceId',s.String]]);
 const ce=tbl('customEvents',[['timestamp',s.DateTime],['name',s.String],['customDimensions',s.Dynamic]]);
-const db=new S.DatabaseSymbol.$ctor1('db',Bridge.toList([azm,casl,ce]),false);
+const ae=tbl('AppEvents',[['TimeGenerated',s.DateTime],['Name',s.String],['AppRoleName',s.String],['Properties',s.Dynamic],['Measurements',s.Dynamic],['OperationId',s.String],['_ResourceId',s.String]]);
+const aa=tbl('AzureActivity',[['TimeGenerated',s.DateTime],['OperationNameValue',s.String],['Caller',s.String],['ActivityStatusValue',s.String],['ResourceGroup',s.String],['_ResourceId',s.String],['CorrelationId',s.String],['Properties_d',s.Dynamic]]);
+const rc=tbl('resourcechanges',[['id',s.String],['properties',s.Dynamic],['resourceGroup',s.String],['subscriptionId',s.String]]);
+const am=tbl('alertsmanagementresources',[['id',s.String],['name',s.String],['properties',s.Dynamic],['resourceGroup',s.String]]);
+const db=new S.DatabaseSymbol.$ctor1('db',Bridge.toList([casl,ce,ae,aa,rc,am]),false);
 const cl=new S.ClusterSymbol.ctor('c',[db]);
 const gs=K.GlobalState.Default.WithCluster(cl).WithDatabase(db);
 let bad=0;

@@ -1,0 +1,15 @@
+// Azure Resource Graph (not Log Analytics): what changed in the resource group in the last 24 hours.
+// Same query the MCP server runs in get_recent_changes. Replace rg-demo with your resource group.
+resourcechanges
+| extend changeTime = todatetime(properties.changeAttributes.timestamp),
+    targetResourceId = tostring(properties.targetResourceId),
+    changeType = tostring(properties.changeType),
+    changedBy = tostring(properties.changeAttributes.changedBy),
+    clientType = tostring(properties.changeAttributes.clientType),
+    operation = tostring(properties.changeAttributes.operation),
+    changes = properties.changes
+| where changeTime > ago(24h)
+| where targetResourceId contains '/resourceGroups/rg-demo/'
+| project changeTime, targetResourceId, changeType, changedBy, clientType, operation, changes
+| order by changeTime desc
+| take 200

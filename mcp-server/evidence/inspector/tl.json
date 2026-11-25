@@ -1,0 +1,40 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"app\": \"ca-demo-web\",\n  \"hours\": 6,\n  \"events\": [\n    {\n      \"time\": \"2026-11-25T15:17:00+00:00\",\n      \"kind\": \"change\",\n      \"summary\": \"Update on ca-demo-web by gisli@contoso.com\",\n      \"why\": \"client: Azure Portal\"\n    },\n    {\n      \"time\": \"2026-11-25T16:37:00+00:00\",\n      \"kind\": \"alert\",\n      \"summary\": \"Sev3 ma-demo-requests-anomaly (Fired)\",\n      \"why\": \"\"\n    },\n    {\n      \"time\": \"2026-11-25T16:49:00+00:00\",\n      \"kind\": \"scaling\",\n      \"summary\": \"scale-out 1 -> 3 replicas\",\n      \"why\": \"load rose: 400 requests/min against 160 avg in the previous 5 min (HTTP/CPU rule)\"\n    },\n    {\n      \"time\": \"2026-11-25T17:07:00+00:00\",\n      \"kind\": \"agent\",\n      \"summary\": \"AgentToolExecution SearchResource ToolStart\",\n      \"why\": \"\"\n    }\n  ],\n  \"count\": 4\n}"
+    }
+  ],
+  "structuredContent": {
+    "app": "ca-demo-web",
+    "hours": 6,
+    "events": [
+      {
+        "time": "2026-11-25T15:17:00+00:00",
+        "kind": "change",
+        "summary": "Update on ca-demo-web by gisli@contoso.com",
+        "why": "client: Azure Portal"
+      },
+      {
+        "time": "2026-11-25T16:37:00+00:00",
+        "kind": "alert",
+        "summary": "Sev3 ma-demo-requests-anomaly (Fired)",
+        "why": ""
+      },
+      {
+        "time": "2026-11-25T16:49:00+00:00",
+        "kind": "scaling",
+        "summary": "scale-out 1 -> 3 replicas",
+        "why": "load rose: 400 requests/min against 160 avg in the previous 5 min (HTTP/CPU rule)"
+      },
+      {
+        "time": "2026-11-25T17:07:00+00:00",
+        "kind": "agent",
+        "summary": "AgentToolExecution SearchResource ToolStart",
+        "why": ""
+      }
+    ],
+    "count": 4
+  },
+  "isError": false
+}

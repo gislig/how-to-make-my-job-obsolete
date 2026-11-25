@@ -1,0 +1,14 @@
+// Part 3: what the agents did, queried from the Log Analytics workspace (workspace-based Application Insights
+// stores customEvents as AppEvents and customDimensions as Properties).
+// SRE Agent event names: "Audit agent actions in Azure SRE Agent" (Microsoft Learn). Mcp* events: this repo's MCP server.
+AppEvents
+| where TimeGenerated > ago(7d)
+| where Name in ("AgentToolExecution", "AgentAzCliExecution", "ApprovalDecision", "McpToolCall", "McpScaleDecision")
+| extend Tool = tostring(Properties.ToolName),
+         Phase = tostring(Properties.EventType),
+         McpTool = tostring(Properties.tool),
+         Decision = tostring(Properties.decision),
+         Client = tostring(Properties.client)
+| where Name != "AgentToolExecution" or Phase == "ToolStart"
+| project TimeGenerated, Name, AppRoleName, Tool = coalesce(Tool, McpTool), Decision, Client
+| order by TimeGenerated desc

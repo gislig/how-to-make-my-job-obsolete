@@ -1,0 +1,10 @@
+// Part 4: every set_scale_range decision the MCP server made, with who asked and why.
+AppEvents
+| where TimeGenerated > ago(30d)
+| where Name == "McpScaleDecision"
+| extend Decision = tostring(Properties.decision), Client = tostring(Properties.client),
+         App = tostring(Properties.app), Reason = tostring(Properties.reason),
+         Before = tostring(Properties.before), Requested = strcat(tostring(Properties.min), "-", tostring(Properties.max)),
+         Reasons = tostring(Properties.reasons)
+| project TimeGenerated, Decision, Client, App, Before, Requested, Reason, Reasons
+| order by TimeGenerated desc

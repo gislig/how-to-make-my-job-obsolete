@@ -10,17 +10,8 @@ param prefix string
 @description('Container app resource ID to watch.')
 param containerAppId string
 
-@description('Container app name (used in log queries).')
-param containerAppName string
-
 @description('The maxReplicas value from the operating contract.')
 param maxReplicas int
-
-@description('Log Analytics workspace resource ID (scope of the log search alert).')
-param workspaceId string
-
-@description('Azure region of the workspace (log search alerts are regional).')
-param location string
 
 @description('Action group resource ID.')
 param actionGroupId string
@@ -28,6 +19,10 @@ param actionGroupId string
 @description('Static threshold: 5xx responses per 5 minutes before alerting.')
 @minValue(1)
 param http5xxThreshold int = 10
+
+@description('Static threshold: container restarts per 15 minutes before alerting.')
+@minValue(0)
+param restartThreshold int = 0
 
 @description('Optional ISO 8601 date. Dynamic thresholds ignore history before this date, for example after a planned migration.')
 param ignoreDataBefore string = ''
@@ -191,55 +186,37 @@ resource http5xxAlert 'Microsoft.Insights/metricAlerts@2026-01-01' = {
   }
 }
 
-// Baseline on logs: how often the platform logs scaling (KEDA) events for this app, compared with its own history.
-// Lots of scaling churn usually means the scale rule thresholds are wrong, not that load is unusual.
-// skipQueryValidation: the ContainerAppSystemLogs table only exists after the first logs arrive.
-resource scalingChurnAlert 'Microsoft.Insights/scheduledQueryRules@2026-03-01' = {
-  name: 'sqr-${prefix}-scaling-churn'
-  location: location
+// Guardrail 3: containers restarting. A crash loop is never "normal", so no learning needed either.
+resource restartAlert 'Microsoft.Insights/metricAlerts@2026-01-01' = {
+  name: 'ma-${prefix}-restarts'
+  location: 'global'
   tags: tags
-  kind: 'LogAlert'
   properties: {
-    displayName: 'Scaling churn on ${containerAppName}'
-    description: 'Number of KEDA events for the app is above its learned pattern (dynamic threshold on a log query).'
-    severity: 3
+    description: 'Container restarts in the last 15 minutes. Scaling out will not fix a crash loop.'
+    severity: 2
     enabled: true
     scopes: [
-      workspaceId
+      containerAppId
     ]
-    evaluationFrequency: 'PT15M'
-    windowSize: 'PT1H'
-    skipQueryValidation: true
+    evaluationFrequency: 'PT5M'
+    windowSize: 'PT15M'
+    targetResourceType: appNamespace
     autoMitigate: true
     criteria: {
+      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
       allOf: [
         {
-          query: 'ContainerAppSystemLogs | where ContainerAppName == "${containerAppName}" | where EventSource has "keda" | project TimeGenerated, ContainerAppName'
-          timeAggregation: 'Count'
-          criterionType: 'DynamicThresholdCriterion'
+          criterionType: 'StaticThresholdCriterion'
+          name: 'restarts'
+          metricNamespace: appNamespace
+          metricName: 'RestartCount'
+          timeAggregation: 'Total'
           operator: 'GreaterThan'
-          alertSensitivity: 'Medium'
-          dimensions: [
-            {
-              name: 'ContainerAppName'
-              operator: 'Include'
-              values: [
-                '*'
-              ]
-            }
-          ]
-          failingPeriods: {
-            numberOfEvaluationPeriods: 1
-            minFailingPeriodsToAlert: 1
-          }
+          threshold: restartThreshold
         }
       ]
     }
-    actions: {
-      actionGroups: [
-        actionGroupId
-      ]
-    }
+    actions: actions
   }
 }
 
@@ -247,5 +224,5 @@ output dynamicAlertIds string[] = [for (rule, i) in dynamicRules: dynamicAlerts[
 output guardrailAlertIds string[] = [
   replicaCeilingAlert.id
   http5xxAlert.id
-  scalingChurnAlert.id
+  restartAlert.id
 ]

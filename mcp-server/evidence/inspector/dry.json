@@ -1,0 +1,31 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"app\": \"ca-demo-web\",\n  \"allowed\": true,\n  \"applied\": false,\n  \"mode\": \"autonomous\",\n  \"from\": [\n    1,\n    10\n  ],\n  \"to\": [\n    3,\n    10\n  ],\n  \"envelope\": [\n    1,\n    10\n  ],\n  \"reasons\": [\n    \"dry run: nothing was changed\"\n  ],\n  \"applyCommand\": \"az containerapp update -n ca-demo-web -g rg-demo --min-replicas 3 --max-replicas 10\"\n}"
+    }
+  ],
+  "structuredContent": {
+    "app": "ca-demo-web",
+    "allowed": true,
+    "applied": false,
+    "mode": "autonomous",
+    "from": [
+      1,
+      10
+    ],
+    "to": [
+      3,
+      10
+    ],
+    "envelope": [
+      1,
+      10
+    ],
+    "reasons": [
+      "dry run: nothing was changed"
+    ],
+    "applyCommand": "az containerapp update -n ca-demo-web -g rg-demo --min-replicas 3 --max-replicas 10"
+  },
+  "isError": false
+}

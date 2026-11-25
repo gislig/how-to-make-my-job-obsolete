@@ -1,68 +1,82 @@
-# Azure AI Ops Agent
+# How to Make My Job Obsolete: Creating an Infrastructure Agent
 
-Code for my blog series **"Obsolete by Design: Building an AI Agent That Runs Your Azure Infrastructure"** on
-[gisli78.substack.com](https://gisli78.substack.com). The series builds, one part at a time, an AI agent that does the
-day-to-day work of an Azure infrastructure specialist: it provisions with Bicep, watches a monitoring baseline,
-scales services within agreed limits, proposes changes as pull requests, and leaves an audit trail for every decision.
+Code for my four-part blog series on [gisli78.substack.com](https://gisli78.substack.com). The series builds an
+AI infrastructure agent on Azure that does the day-to-day work of an infrastructure specialist: it watches a
+monitoring baseline, scales a workload inside an operating contract, can't step outside its guardrails, leaves an
+audit trail, and answers questions from a chat app through a custom MCP server.
 
 Author: **Gísli Guðmundsson**, Microsoft MVP, Iceland.
 
-> Status: parts 1 and 2. Validated with `bicep build`, `bicep lint` and `bicep build-params` (Bicep 0.48.1).
-> Not yet deployed by me in a live subscription from this repo. Run `what-if` first.
+> Status: all four parts are written. Everything here was validated without an Azure subscription
+> (`scripts/validate.sh`: Bicep build, lint and build-params, KQL checks, 55 Python tests, plus an MCP Inspector run
+> against the server). I haven't deployed this repo to a live subscription yet. Run `what-if` first.
 
-## What's here
+## The series
 
-| Path | Part | What it is |
-|---|---|---|
-| `docs/architecture.md` | 1 | The layers (desired state, reflexes, senses, judgment, guardrails, accountability) and design rules |
-| `agent/job-description.md` | 1 | The agent's instructions, written as a job description |
-| `agent/guardrails.md` | 1 | Guardrail intent: tool access policy patterns, RBAC, run modes |
-| `infra/types/contract.bicep` | 1 | The **operating contract** as an exported Bicep type, plus a function that turns it into `aiops-*` tags |
-| `infra/main.bicep` | 2 | Foundation: Log Analytics, Application Insights, Container Apps environment, sample workload, baseline alerts |
-| `infra/modules/baseline-alerts.bicep` | 2 | Dynamic-threshold alerts (requests, CPU, memory, scaling churn) and static guardrails (replica ceiling, 5xx) |
-| `queries/*.kql` | 2 | Hour-of-week baseline, anomaly decomposition, replica timeline, KEDA events, agent audit |
-| `scripts/deploy-stack.sh` | 2 | Deploys the foundation as a deployment stack with `denyDelete` |
-| `scripts/what-if.sh`, `scripts/validate.sh`, `scripts/load.sh` | 2 | Preview, validate, generate load |
-| `scripts/kql-check/` | 2 | Parses the KQL files with Kusto.Language |
+1. **The Plan and the Foundation.** The operating contract as a Bicep type and `aiops-*` tags, a container app with
+   HTTP and CPU scale rules, monitoring, dynamic-threshold and guardrail alerts, and deployment stacks.
+   Folders: `infra/main.bicep`, `infra/modules/`, `infra/types/`.
+2. **Hiring the Agent.** Azure SRE Agent with read-only roles on one resource group, Review mode, a job description and
+   an hourly baseline task. Folders: `infra/agent/`, `agent/`.
+3. **Guardrails, Audit and the Timeline Page.** Tool access policies, Azure Policy for the contract, Activity Log
+   export, alerts that watch the watcher, KQL, and a timeline page that explains every scale event.
+   Folders: `infra/governance/`, `queries/`, `agent/guardrails.md`.
+4. **Talking to My Infrastructure Through a Custom MCP Server.** A remote MCP server on Container Apps (Streamable
+   HTTP, API key per client), eight read tools and one bounded write tool, used from Grok Bot and SRE Agent.
+   Folders: `mcp-server/`, `infra/mcp/`, `docs/connect-chat-assistant.md`.
 
-## Quick start (part 2)
-
-```bash
-az group create -n rg-aiops-demo -l swedencentral
-./scripts/validate.sh
-./scripts/what-if.sh rg-aiops-demo
-./scripts/deploy-stack.sh rg-aiops-demo <platform-team-group-object-id>
-./scripts/load.sh "$(az stack group show -n aiops-foundation -g rg-aiops-demo --query outputs.appUrl.value -o tsv)" 300 200
+```mermaid
+flowchart LR
+  P1["Part 1<br/>foundation + contract"] --> P2["Part 2<br/>SRE Agent, Review mode"]
+  P2 --> P3["Part 3<br/>guardrails + audit + timeline"]
+  P3 --> P4["Part 4<br/>custom MCP server + Grok Bot"]
 ```
 
-Requirements: Azure CLI 2.61.0 or later (deployment stacks), Bicep CLI, and Owner or
-Contributor + Azure Deployment Stack Owner on the resource group (to create deny settings).
+See `docs/architecture.md` for the full picture.
 
-## The operating contract
+## Requirements
 
-Every workload the agent manages carries its boundaries as tags:
+- An Azure subscription where you can create resource groups and role assignments (Owner, or Contributor plus
+  User Access Administrator, on the resource group). Part 3 needs Resource Policy Contributor and Monitoring
+  Contributor at subscription scope, or Owner.
+- Azure CLI 2.61.0 or later (deployment stacks), Bicep CLI (validated with 0.48.1).
+- Resource providers: `Microsoft.App`, `Microsoft.OperationalInsights`, `Microsoft.Insights`,
+  `Microsoft.ManagedIdentity`, `Microsoft.ContainerRegistry` (these are the namespaces the Bicep deploys).
+- A region where Azure SRE Agent is available. Sweden Central is in every list I checked; confirm in the portal.
+- Python 3.12 or later for the MCP server and its tests.
 
-| Tag | Meaning |
-|---|---|
-| `aiops-managed` | `true` when the agent may operate the resource |
-| `aiops-owner` | Who the agent escalates to |
-| `aiops-min-replicas` / `aiops-max-replicas` | The only range the agent may move replicas in |
-| `aiops-change-mode` | `review` (propose, human approves) or `autonomous` (act, then report) |
-| `aiops-tier` | `prod` or `nonprod` |
-| `aiops-slo-p95-ms` | Latency objective to protect (0 = none) |
-| `aiops-budget-eur` | Monthly cost ceiling (0 = none) |
+## Quick start
 
-## Series
+```bash
+RG=rg-aiops-demo; LOC=swedencentral
+az group create -n $RG -l $LOC
 
-1. Hiring an AI infrastructure engineer: the vision and architecture
-2. The foundation: Bicep, deployment stacks and a monitoring baseline the agent can trust
-3. Onboarding the employee: Azure SRE Agent with Bicep, identity and Review mode
-4. A tool belt with guardrails: a self-hosted Azure MCP Server for the agent
-5. Scale by evidence: letting the agent tune autoscale from the baseline
-6. Changes through code: the agent opens pull requests, what-if and deployment stacks apply them
-7. Securing the AI management agent: identity, least privilege, hooks, policy and audit
-8. The timeline page: what scaled, when, why, with links to the evidence
+./scripts/validate.sh                         # no Azure needed
+./scripts/what-if.sh $RG foundation           # preview
+./scripts/deploy-stack.sh $RG foundation      # part 1
+./scripts/deploy-stack.sh $RG agent           # part 2
+./scripts/deploy-governance.sh $RG aiops $LOC Audit   # part 3
+./scripts/deploy-mcp.sh $RG 1.0.0             # part 4: prints the MCP URL and two API keys once
+```
+
+Then follow `docs/connect-chat-assistant.md`.
+
+## Layout
+
+- `infra/` Bicep: foundation (`main.bicep`), `agent/`, `governance/`, `mcp/`, shared `modules/` and `types/`.
+- `agent/` The agent's job description, scheduled task and guardrails.
+- `mcp-server/` The custom MCP server (Python, MCP SDK 2.3.0), tests, Dockerfile, Inspector evidence.
+- `queries/` KQL for the audit trail and Resource Graph.
+- `scripts/` Deploy, what-if, validate, load generation, KQL checker.
+- `docs/` Architecture, Azure MCP Server notes, connecting a chat assistant.
+
+## Safety defaults
+
+- The agent and the MCP server start with reader roles only.
+- `set_scale_range` defaults to `dry_run=true`, needs `allowWrites=true` at deploy time (which also creates the one
+  write role), only acts on apps with a valid contract in autonomous mode, and never changes production.
+- Every MCP call is audited with the client name.
 
 ## License
 
-MIT
+MIT, see `LICENSE`.

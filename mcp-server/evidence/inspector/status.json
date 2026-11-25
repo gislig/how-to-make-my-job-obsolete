@@ -1,0 +1,41 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\n  \"id\": \"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-demo/providers/Microsoft.App/containerApps/ca-demo-web\",\n  \"name\": \"ca-demo-web\",\n  \"location\": \"swedencentral\",\n  \"provisioningState\": \"Succeeded\",\n  \"runningStatus\": \"Running\",\n  \"latestRevision\": \"ca-demo-web--r1\",\n  \"latestReadyRevision\": \"ca-demo-web--r1\",\n  \"fqdn\": \"ca-demo-web.example.swedencentral.azurecontainerapps.io\",\n  \"minReplicas\": 1,\n  \"maxReplicas\": 10,\n  \"scaleRules\": [\n    {\n      \"name\": \"http-concurrency\",\n      \"kind\": \"http\",\n      \"metadata\": {\n        \"concurrentRequests\": \"50\"\n      }\n    }\n  ],\n  \"replicasNow\": 3.0,\n  \"contract\": {\n    \"owner\": \"platform-team@contoso.com\",\n    \"min_replicas\": 1,\n    \"max_replicas\": 10,\n    \"change_mode\": \"autonomous\",\n    \"tier\": \"nonprod\",\n    \"slo_p95_ms\": 300,\n    \"budget_eur\": 50,\n    \"effective_mode\": \"autonomous\"\n  }\n}"
+    }
+  ],
+  "structuredContent": {
+    "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-demo/providers/Microsoft.App/containerApps/ca-demo-web",
+    "name": "ca-demo-web",
+    "location": "swedencentral",
+    "provisioningState": "Succeeded",
+    "runningStatus": "Running",
+    "latestRevision": "ca-demo-web--r1",
+    "latestReadyRevision": "ca-demo-web--r1",
+    "fqdn": "ca-demo-web.example.swedencentral.azurecontainerapps.io",
+    "minReplicas": 1,
+    "maxReplicas": 10,
+    "scaleRules": [
+      {
+        "name": "http-concurrency",
+        "kind": "http",
+        "metadata": {
+          "concurrentRequests": "50"
+        }
+      }
+    ],
+    "replicasNow": 3,
+    "contract": {
+      "owner": "platform-team@contoso.com",
+      "min_replicas": 1,
+      "max_replicas": 10,
+      "change_mode": "autonomous",
+      "tier": "nonprod",
+      "slo_p95_ms": 300,
+      "budget_eur": 50,
+      "effective_mode": "autonomous"
+    }
+  },
+  "isError": false
+}

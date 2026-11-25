@@ -11,9 +11,6 @@ param location string
 @description('Container Apps environment resource ID.')
 param environmentId string
 
-@description('Log Analytics workspace resource ID for platform metrics.')
-param workspaceId string
-
 @description('Container image. The default is the public Container Apps quickstart image.')
 param image string = 'mcr.microsoft.com/k8se/quickstart:latest'
 
@@ -105,23 +102,6 @@ resource app 'Microsoft.App/containerApps@2026-01-01' = {
         rules: contract.minReplicas >= 1 ? [httpRule, cpuRule] : [httpRule]
       }
     }
-  }
-}
-
-// Platform metrics to Log Analytics (AzureMetrics table) so the baseline and timeline queries can read them.
-// 2021-05-01-preview is the newest diagnosticSettings version and the first with categoryGroup and logAnalyticsDestinationType.
-#disable-next-line use-recent-api-versions
-resource appDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'to-log-analytics'
-  scope: app
-  properties: {
-    workspaceId: workspaceId
-    metrics: [
-      {
-        category: 'AllMetrics'
-        enabled: true
-      }
-    ]
   }
 }
 
